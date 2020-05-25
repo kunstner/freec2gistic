@@ -1,0 +1,37 @@
+library(tidyverse)
+library(GenomicRanges)
+
+# Get data ----------------------------------------------------------------
+
+common.cnvs <- GRanges( read.delim( file = "../data/CNV.hg19.bypos.111213.txt" ) )
+files <- list.files(path = "../data/lymphome_WXS/cnvs", pattern="freec_segments.bed", full.names=TRUE)
+
+segData <- NULL
+for( i in files ) {
+    print(i)
+    tab <- read.table(i)
+    id <- gsub(pattern = "../data/lymphome_WXS/cnvs.", replacement = "", i)
+    id <- gsub(pattern = ".freec_segments.bed", replacement = "", id)
+    tab$Sample <- id
+    tab$Dummy <- 'NA'
+    tab <- tab[, c("Sample", "V1", "V2", "V3", "Dummy", "V4")]
+    tab$V4 <- log2(tab$V4) - 1
+    segData <- rbind(segData, tab)
+}
+
+segData <- segData %>% 
+    dplyr::filter( V1 != 'chrX' & V1 != 'chrY') %>% 
+    dplyr::rename( Chromosome = V1, Start = V2, End = V3, log2ratio = V4 )
+
+segData$Chromosome <- gsub(pattern = "chr", replacement = "", segData$Chromosome)
+
+# get index of all CNVs without a hit in common.cnv
+#subsetByOverlaps( GRanges(cnvdata[4, 1:4]), common.cnvs ) 
+idx <- which( countOverlaps( GRanges(segData[, -1]), common.cnvs ) == 0 )
+segData <- segData[idx, ]
+rownames(segData) <- NULL
+
+write.table(x = segData, file = "gistic.segments.txt", sep = "\t", row.names = F, col.names = F, quote = F)
+
+Next, convert file
+
