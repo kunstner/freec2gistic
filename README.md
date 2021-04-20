@@ -37,7 +37,7 @@ done
 
 # Join BED files in R
 
-Files are joined and the ratio is transformed applying _log10(ratio)-1_ (according to https://www.biostars.org/p/426635/)
+Files are joined and the ratio is transformed applying _log2(ratio)-1_ (according to https://www.biostars.org/p/426635/)
 
 ```
 library(tidyverse)
@@ -55,7 +55,7 @@ for( i in files ) {
     tab$Sample <- id
     tab$Dummy <- 'NA'
     tab <- tab[, c("Sample", "V1", "V2", "V3", "Dummy", "V4")]
-    # convert ratio to log10(ratio)-1
+    # convert ratio to log2(ratio)-1
     tab$V4 <- log2(tab$V4) - 1
     segData <- rbind(segData, tab)
 }
